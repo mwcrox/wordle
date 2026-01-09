@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wordle - Hard Mode</title>
+    <link rel="stylesheet" href="../CSS/styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <h1>Wordle - Hard Mode</h1>
+
+        <div id="setup">
+            <input type="text" id="solution-input" maxlength="5" placeholder="Enter solution word" />
+            <button id="set-solution">Start Game</button>
+            <p id="setup-message"></p>
+        </div>
+
+        <div id="game-board" class="board hidden"></div>
+        <div id="keyboard" class="hidden"></div>
+
+        <p id="message"></p>
+        <a href="index.html" class="button">Return to Home</a>
+
+    </div>
+
+    <script src="../JavaScript/words.js"></script>
+    <script src="../JavaScript/allowed-guesses.js"></script>
+    <script src="../JavaScript/hard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,22 @@
+const ALLOWED_GUESSES = [
+    "apple",
+    "grape",
+    "house",
+    "train",
+    "light",
+    "stone",
+    "crane",
+    "flame",
+    "plane",
+    "ghost",
+    "blame",
+    "slide",
+    "spike",
+    "shard",
+    "tiger",
+    "brave",
+    "knock",
+    "quick",
+    "sling",
+    "bring"
+];
