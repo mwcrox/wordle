@@ -1,3 +1,28 @@
+// ===============================
+// Load Word Lists from TXT Files
+// ===============================
+
+let VALID_WORDS = [];
+let ALLOWED_GUESSES = [];
+
+async function loadWordLists() {
+    const validResponse = await fetch("../JavaScript/words.txt");
+    const guessResponse = await fetch("../JavaScript/allowed-guesses.txt");
+
+    const validText = await validResponse.text();
+    const guessText = await guessResponse.text();
+
+    VALID_WORDS = validText.split("\n").map(word => word.trim().toLowerCase());
+    ALLOWED_GUESSES = guessText.split("\n").map(word => word.trim().toLowerCase());
+}
+
+// Preload word lists
+loadWordLists();
+
+// ===============================
+// DOM Elements
+// ===============================
+
 const board = document.getElementById("game-board");
 const keyboard = document.getElementById("keyboard");
 const solutionInput = document.getElementById("solution-input");
@@ -5,68 +30,104 @@ const setSolutionBtn = document.getElementById("set-solution");
 const setupMessage = document.getElementById("setup-message");
 const messageEl = document.getElementById("message");
 
+// ===============================
+// Game State
+// ===============================
+
 let solution = "";
 let currentRow = 0;
-let guesses = [];
+let currentGuess = "";
 
 const MAX_TRIES = 6;
 const WORD_LENGTH = 5;
 
-setSolutionBtn.addEventListener("click", () => {
+// ===============================
+// Start Game
+// ===============================
+
+setSolutionBtn.addEventListener("click", async () => {
+
+    if (VALID_WORDS.length === 0 || ALLOWED_GUESSES.length === 0) {
+        await loadWordLists();
+    }
+
     const word = solutionInput.value.toLowerCase();
+
     if (word.length !== 5 || !VALID_WORDS.includes(word)) {
         setupMessage.textContent = "Invalid solution word.";
         return;
     }
+
     solution = word;
+
     document.getElementById("setup").classList.add("hidden");
     board.classList.remove("hidden");
     keyboard.classList.remove("hidden");
+
     initBoard();
     initKeyboard();
 });
 
+// ===============================
+// Initialize Board
+// ===============================
+
 function initBoard() {
     board.innerHTML = "";
+
     for (let i = 0; i < MAX_TRIES; i++) {
         const row = document.createElement("div");
         row.classList.add("row");
+
         for (let j = 0; j < WORD_LENGTH; j++) {
             const cell = document.createElement("div");
             cell.classList.add("cell");
             row.appendChild(cell);
         }
+
         board.appendChild(row);
     }
+
     document.addEventListener("keydown", handleKeyPress);
 }
+
+// ===============================
+// Initialize Keyboard
+// ===============================
 
 function initKeyboard() {
     const rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
     keyboard.innerHTML = "";
-    rows.forEach((rowLetters) => {
+
+    rows.forEach(rowLetters => {
         const row = document.createElement("div");
         row.classList.add("kb-row");
+
         for (let letter of rowLetters) {
             const key = document.createElement("button");
             key.textContent = letter;
             key.addEventListener("click", () => handleKey(letter));
             row.appendChild(key);
         }
+
         keyboard.appendChild(row);
     });
 
     const enter = document.createElement("button");
     enter.textContent = "Enter";
     enter.addEventListener("click", submitGuess);
+
     const back = document.createElement("button");
     back.textContent = "←";
     back.addEventListener("click", deleteLetter);
+
     keyboard.appendChild(enter);
     keyboard.appendChild(back);
 }
 
-let currentGuess = "";
+// ===============================
+// Input Handling
+// ===============================
 
 function handleKeyPress(e) {
     if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toLowerCase());
@@ -88,13 +149,19 @@ function deleteLetter() {
 
 function updateBoard() {
     const row = board.children[currentRow];
+
     for (let i = 0; i < WORD_LENGTH; i++) {
         row.children[i].textContent = currentGuess[i] || "";
     }
 }
 
+// ===============================
+// Submit Guess
+// ===============================
+
 function submitGuess() {
     if (currentGuess.length !== WORD_LENGTH) return;
+
     if (!ALLOWED_GUESSES.includes(currentGuess) && !VALID_WORDS.includes(currentGuess)) {
         messageEl.textContent = "Not in word list.";
         return;
@@ -105,8 +172,10 @@ function submitGuess() {
 
     [...currentGuess].forEach((letter, i) => {
         const cell = row.children[i];
+
         setTimeout(() => {
             cell.classList.add("flip");
+
             const correct = solution[i] === letter;
             const present = solution.includes(letter) && !correct;
 
@@ -120,13 +189,17 @@ function submitGuess() {
                 cell.classList.add("absent");
                 updateKeyboardKey(letter, "absent");
             }
+
         }, i * delay);
     });
 
     setTimeout(() => {
+
         if (currentGuess === solution) {
             messageEl.textContent = "You guessed it!";
             document.removeEventListener("keydown", handleKeyPress);
+
+            // 🎉 Confetti
             confetti({
                 particleCount: 150,
                 spread: 70,
@@ -134,7 +207,9 @@ function submitGuess() {
             });
 
         } else {
+
             currentRow++;
+
             if (currentRow === MAX_TRIES) {
                 messageEl.textContent = `Out of tries! The word was "${solution.toUpperCase()}".`;
                 document.removeEventListener("keydown", handleKeyPress);
@@ -142,18 +217,28 @@ function submitGuess() {
                 currentGuess = "";
             }
         }
+
     }, WORD_LENGTH * delay);
 }
 
+// ===============================
+// Keyboard Color Updating
+// ===============================
+
 function updateKeyboardKey(letter, status) {
     const keys = keyboard.querySelectorAll("button");
-    keys.forEach((key) => {
+
+    keys.forEach(key => {
         if (key.textContent === letter) {
+
             const current = key.className;
+
             if (
                 status === "correct" ||
                 (status === "present" && !current.includes("key-correct")) ||
-                (status === "absent" && !current.includes("key-correct") && !current.includes("key-present"))
+                (status === "absent" &&
+                 !current.includes("key-correct") &&
+                 !current.includes("key-present"))
             ) {
                 key.className = "";
                 key.classList.add(`key-${status}`);
@@ -161,4 +246,3 @@ function updateKeyboardKey(letter, status) {
         }
     });
 }
-
